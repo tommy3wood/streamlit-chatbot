@@ -8,7 +8,7 @@ def show_messages(text):
         f"{_['role']}: {_['content']}" for _ in st.session_state["messages"][1:]
     ]
     text.text_area("Messages", value=str("\n".join(messages_str)), height=400)
-
+ 
 
 with open("secrets.toml", "r") as f:
     config = toml.load(f)
