@@ -1,19 +1,43 @@
 import openai
-import toml 
+import toml
+import streamlit as st
 
-with open('secrets.toml', 'r') as f:
+
+def show_messages(text):
+    messages_str = [
+        f"{_['role']}: {_['content']}" for _ in st.session_state["messages"][1:]
+    ]
+    text.text_area("Messages", value=str("\n".join(messages_str)), height=400)
+
+
+with open("secrets.toml", "r") as f:
     config = toml.load(f)
 
-openai.api_key = config['OPENAI_KEY']
+openai.api_key = config["OPENAI_KEY"]
+BASE_PROMPT = [{"role": "system", "content": "You are a helpful assistant."}]
 
-response = openai.ChatCompletion.create(
-  model="gpt-3.5-turbo",
-  messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Who won the world series in 2020?"},
-        {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-        {"role": "user", "content": "Where was it played?"}
-    ]
-)
+if "messages" not in st.session_state:
+    st.session_state["messages"] = BASE_PROMPT
 
-print(response)
+st.header("STREAMLIT GPT-3 CHATBOT")
+
+text = st.empty()
+show_messages(text)
+
+prompt = st.text_input("Prompt", value="Enter your message here...")
+
+if st.button("Send"):
+    with st.spinner("Generating response..."):
+        st.session_state["messages"] += [{"role": "user", "content": prompt}]
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo", messages=st.session_state["messages"]
+        )
+        message_response = response["choices"][0]["message"]["content"]
+        st.session_state["messages"] += [
+            {"role": "system", "content": message_response}
+        ]
+        show_messages(text)
+
+if st.button("Clear"):
+    st.session_state["messages"] = BASE_PROMPT
+    show_messages(text)
