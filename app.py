@@ -9,7 +9,7 @@ def show_messages(text):
     ]
     text.text_area("Messages", value=str("\n".join(messages_str)), height=400)
  
-with open("secrets.toml", "r") as f:
+with open(**st.secrets, "r") as f:
     config = toml.load(f)
 
 openai.api_key = config["OPENAI_KEY"]
